@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: house-price-prediction
-        image: namnguyen059/house-price-prediction:{{ .Values.image.tag }}
+        image: mxomtm/house-price-prediction:{{ .Values.image.tag }}
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
