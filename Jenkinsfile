@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     options {
+        // Max number of build logs to keep and days to keep
         buildDiscarder(logRotator(numToKeepStr: '5', daysToKeepStr: '5'))
+        // Enable timestamp at each job in the pipeline
         timestamps()
     }
 
@@ -15,7 +17,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing model correctness..'
-                echo 'Always pass all test unit :D'
+                echo 'Always pass all test units :D'
             }
         }
 
@@ -26,7 +28,7 @@ pipeline {
                     def imageName = "${registry}:v1.${BUILD_NUMBER}"
 
                     dockerImage = docker.build(imageName, "--file Dockerfile .")
-                    echo 'Pushing image to dockerhub..'
+                    echo 'Pushing image to Docker Hub..'
                     docker.withRegistry('', registryCredential) {
                         dockerImage.push()
                     }
@@ -37,11 +39,29 @@ pipeline {
         stage('Deploy to Google Kubernetes Engine') {
             agent {
                 kubernetes {
-                    containerTemplate {
-                        name 'helm'
-                        image 'duong05102002/jenkins-k8s:latest'
-                        serviceAccount 'jenkins-sa' 
-                    }
+                    defaultContainer 'helm'
+                    yaml """
+                    apiVersion: v1
+                    kind: Pod
+                    metadata:
+                      labels:
+                        app: helm
+                    spec:
+                      containers:
+                      - name: helm
+                        image: duong05102002/jenkins-k8s:latest
+                        command:
+                        - cat
+                        tty: true
+                        volumeMounts:
+                        - name: dockersock
+                          mountPath: /var/run/docker.sock
+                      serviceAccountName: jenkins-sa
+                      volumes:
+                      - name: dockersock
+                        hostPath:
+                          path: /var/run/docker.sock
+                    """
                 }
             }
             steps {
