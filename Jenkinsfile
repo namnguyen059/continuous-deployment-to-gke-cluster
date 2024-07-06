@@ -39,10 +39,29 @@ pipeline {
         stage('Deploy to Google Kubernetes Engine') {
             agent {
                 kubernetes {
-                    containerTemplate {
-                        name 'helm' // Name of the container to be used for helm upgrade
-                        image 'duong05102002/jenkins-k8s:latest' // The image containing helm
-                    }
+                    defaultContainer 'helm'
+                    yaml """
+                    apiVersion: v1
+                    kind: Pod
+                    metadata:
+                      labels:
+                        app: helm
+                    spec:
+                      containers:
+                      - name: helm
+                        image: duong05102002/jenkins-k8s:latest
+                        command:
+                        - cat
+                        tty: true
+                        volumeMounts:
+                        - name: dockersock
+                          mountPath: /var/run/docker.sock
+                      serviceAccountName: jenkins-sa
+                      volumes:
+                      - name: dockersock
+                        hostPath:
+                          path: /var/run/docker.sock
+                    """
                 }
             }
             steps {
