@@ -9,6 +9,7 @@ pipeline {
     environment {
         registry = 'mxomtm/house-price-prediction'
         registryCredential = 'dockerhub'
+        KUBECONFIG = '/root/.kube/config'  // Path to your kubeconfig file if needed
     }
 
     stages {
@@ -37,18 +38,30 @@ pipeline {
         stage('Deploy to Google Kubernetes Engine') {
             agent {
                 kubernetes {
-                    containerTemplate {
-                        name 'helm'
-                        image 'duong05102002/jenkins-k8s:latest'
-                    }
+                    // Specify service account and credentials
+                    defaultContainer 'helm'
+                    yaml """
+                        apiVersion: v1
+                        kind: Pod
+                        metadata:
+                          labels:
+                            app: app
+                          name: app
+                        spec:
+                          containers:
+                          - name: helm
+                            image: 'duong05102002/jenkins-k8s:latest'
+                          serviceAccountName: jenkins-sa
+                          restartPolicy: Never
+                    """
                 }
             }
             steps {
-                script {
-                    container('helm') {
-                        sh("helm upgrade --install app --set image.repository=${registry} \
-                        --set image.tag=v1.${BUILD_NUMBER} ./helm_charts/app --namespace model-serving")
-                    }
+                container('helm') {
+                    sh """
+                    helm upgrade --install app --set image.repository=${registry} \
+                    --set image.tag=v1.${BUILD_NUMBER} ./helm_charts/app --namespace model-serving
+                    """
                 }
             }
         }
