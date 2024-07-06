@@ -1,5 +1,6 @@
 Guide: https://github.com/duongngyn0510/continuous-deployment-to-gke-cluster/blob/master/README.md
 
+
 ### 4.4.5. Set up a connection to GKE by adding the cluster certificate key at Manage Jenkins/Clouds.
 
 ```sh
@@ -36,5 +37,10 @@ This command should output a token. Make sure to copy this token.
      - **Credentials**: Select the credentials you added in the previous step.
      - **Jenkins URL**: The URL of your Jenkins instance (e.g., `http://<your-jenkins-url>:8080`).
 
+**Test API**
+```sh
+kubectl get services
+curl -X POST http://externalIP:80/predict -d '{"features": {"feature1": 37.454011884736246, "feature2": 9.256646441930982}}'
+```
 
 
