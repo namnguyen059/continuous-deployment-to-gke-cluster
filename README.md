@@ -1,6 +1,14 @@
-Next, let's proceed with generating the token and configuring the Jenkins Kubernetes plugin.
+Guide: https://github.com/duongngyn0510/continuous-deployment-to-gke-cluster/blob/master/README.md
 
-### Step 1: Generate the Token for `jenkins-sa`
+### 4.4.5. Set up a connection to GKE by adding the cluster certificate key at Manage Jenkins/Clouds.
+
+```sh
+kubectl create serviceaccount jenkins-sa --namespace model-serving
+kubectl create clusterrolebinding jenkins-sa-binding --clusterrole=cluster-admin --serviceaccount=model-serving:jenkins-sa 
+kubectl create clusterrolebinding cluster-admin-default-binding --clusterrole=cluster-admin --user=system:serviceaccount:model-serving:default
+```
+
+**Step 1: Generate the Token for `jenkins-sa`**
 
 Run the following command to generate a token for the `jenkins-sa` service account:
 ```sh
@@ -8,7 +16,7 @@ kubectl -n model-serving create token jenkins-sa
 ```
 This command should output a token. Make sure to copy this token.
 
-### Step 2: Configure Jenkins Kubernetes Plugin with the Token
+**Step 2: Configure Jenkins Kubernetes Plugin with the Token**
 
 1. **Add Credentials in Jenkins:**
    - Go to **Manage Jenkins** > **Manage Credentials**.
@@ -28,25 +36,5 @@ This command should output a token. Make sure to copy this token.
      - **Credentials**: Select the credentials you added in the previous step.
      - **Jenkins URL**: The URL of your Jenkins instance (e.g., `http://<your-jenkins-url>:8080`).
 
-3. **Test the Connection:**
-   - After entering the details, click the **Test Connection** button to verify that Jenkins can connect to the GKE cluster using the provided token.
 
-### Step 3: Add Kubernetes Pod Template in Jenkins
 
-1. Under the Kubernetes cloud configuration, click **Add Pod Template**.
-2. Provide the following details for the pod template:
-   - **Name**: A name for the pod template.
-   - **Namespace**: The namespace where the pod will run (`model-serving`).
-   - **Labels**: A label to identify this pod template.
-3. Configure the container details:
-   - **Name**: A name for the container.
-   - **Docker Image**: The Docker image to use for the Jenkins agent.
-   - **Command**: (optional) Command to run inside the container.
-   - **Args**: (optional) Arguments for the command.
-
-### Step 4: Test the Configuration
-
-1. Create a new Jenkins job or configure an existing one.
-2. Under the **Build Environment** section, check **Restrict where this project can be run**.
-3. In the **Label Expression** field, enter the label you specified in the pod template.
-4. Save and run the job to ensure it triggers a Kubernetes pod in your GKE cluster.
